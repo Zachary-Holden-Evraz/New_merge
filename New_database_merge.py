@@ -191,19 +191,24 @@ def finishing_touches():
         if c2.value == None:
             c2.value = c.value
 
-    # Delete Empty Rows
+
+    # Delete Empty rows
     row_count_max = worksheet.max_row # Recount the rows
     rows_to_delete = []
-    for row in range(4, row_count_max+1): # We must first find each row that needs to be deleted
-        empty = []
-        for column in range(4, 22+1): # columns D-V
-            c = worksheet.cell(row, column)
-            if c.value == None:
-                empty.append(column)
-        if len(empty) == 19: # 19 is all rows in range
-            rows_to_delete.append(row)
+    for row in worksheet.iter_rows(min_row=4, max_row=worksheet.max_row, min_col=4, max_col=22): # columns D-V
+        if all(cell.value is None for cell in row):
+            rows_to_delete.append(row[0].row)
+
+    # Delete Empty Rows
     for row in reversed(rows_to_delete): # Delete the rows >:)
-        worksheet.delete_rows(row)
+        worksheet.delete_rows(row) 
+    
+    # Save in case the script is closed
+    try:
+        workbook.save(filename = main_file)
+    except:
+        pass
+
 
     # Delete Rows that do not have heat numbers (Generally these are just rows that didn't need to be copied)
     row_count_max = worksheet.max_row # Recount the rows after rows have been deleted
