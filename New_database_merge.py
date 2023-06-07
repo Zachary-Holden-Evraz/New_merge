@@ -213,7 +213,6 @@ def finishing_touches():
         try:
             if int(c.value) not in range(100000, 9999999): #Range between 100,000 and 10,000,000 - just in case we go over 1,000,000 in heat numbers in the future
                 to_delete.append(row)
-                print(c.value, 'will be deleted')
         except:
             pass
 
