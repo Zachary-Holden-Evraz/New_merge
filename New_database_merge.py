@@ -192,17 +192,46 @@ def finishing_touches():
         if c2.value == None:
             c2.value = c.value
 
+    workbook.save(filename = main_file)
 
-    # Delete Empty rows
-    row_count_max = worksheet.max_row # Recount the rows
-    rows_to_delete = []
-    for row in worksheet.iter_rows(min_row=4, max_row=worksheet.max_row, min_col=4, max_col=22): # columns D-V
-        if all(cell.value is None for cell in row):
-            rows_to_delete.append(row[0].row)
+    # Delete the empty cells - using pandas becuase it is significantly faster
+    df = pd.read_excel(main_file)
+    # Identify and delete rows with empty values in columns 4-22
+    df.dropna(subset=df.columns[3:22], how='all', inplace=True)
 
-    # Delete Empty Rows
-    for row in reversed(rows_to_delete): # Delete the rows >:)
-        worksheet.delete_rows(row) 
+    # Write the updated DataFrame back to Excel
+    # os.chdir(main_file)
+    writer = pd.ExcelWriter(main_file, engine='openpyxl')
+    df.to_excel(writer, index=False)
+    writer.save()
+
+    # Reload the workbook
+    main_data = pyxl.load_workbook(main_file)
+    main_sheet = main_data.worksheets[0]
+    workbook = Workbook()
+    worksheet = workbook.active
+    row_count = main_sheet.max_row
+    column_count = main_sheet.max_column
+
+# Make sure data in the main file stays (because this will overwite existing file)
+    for i in range (1, row_count + 1):
+        for j in range (1, column_count + 1):
+            # reading cell value from source file
+            c = main_sheet.cell(row = i, column = j)
+            # writing the read value to destination file
+            worksheet.cell(row = i, column = j).value = c.value
+
+
+    # # Delete Empty rows
+    # row_count_max = worksheet.max_row # Recount the rows
+    # rows_to_delete = []
+    # for row in worksheet.iter_rows(min_row=4, max_row=worksheet.max_row, min_col=4, max_col=22): # columns D-V
+    #     if all(cell.value is None for cell in row):
+    #         rows_to_delete.append(row[0].row)
+
+    # # Delete
+    # for row in reversed(rows_to_delete): # Delete the rows >:)
+    #     worksheet.delete_rows(row) 
     
     # Save in case the script is closed
     try:
@@ -381,7 +410,7 @@ def stop():
 
 def stop_program():
     # Put on the finishing touches
-    text = Label(app, text = 'Applying Formatting, this may take a bit')
+    text = Label(app, text = 'Applying Formatting, this may take a few minutes')
     text.grid()
     finishing_touches()
     # Save the excel file and close the workbooks
