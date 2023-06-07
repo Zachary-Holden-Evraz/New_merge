@@ -1,5 +1,6 @@
 Update 6/7/23:
-
+- This script is only functional for years 2016+.  Previous years have completely different formatting and 
+	naming schemes, making this script unable to find what it needs.
 - The program is functional, though there may still be small errors I overlooked.  Keep an eye on the box
 	that shows the lines of code in case errors appear.  If an error appears, the program may stop.
 - The formatting portion of the script takes a long time because it has to evaluate if a row is empty to

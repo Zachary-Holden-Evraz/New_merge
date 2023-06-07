@@ -80,6 +80,22 @@ def Merge_RPT_files():
                     sheets.append(i)
                 elif name == 'INSP RPT 2 (2)':
                     sheets.append(i)
+                elif name == 'INSP RPT 1 (8hr)':
+                    sheets.append(i)
+                elif name == 'INSP RPT 1 (8hr) (2)':
+                    sheets.append(i)
+                elif name == 'INSP RPT 1 (12hr)':
+                    sheets.append(i)
+                elif name == 'INSP RPT 1 (12hr) (2)':
+                    sheets.append(i)
+                elif name == 'INSP RPT 2 (8hr)':
+                    sheets.append(i)
+                elif name == 'INSP RPT 2 (8hr) (2)':
+                    sheets.append(i)
+                elif name == 'INSP RPT 2 (12hr)':
+                    sheets.append(i)
+                elif name == 'INSP RPT 2 (12hr) (2)':
+                    sheets.append(i)
                 i += 1
             if i >= len(names)-1:
                 pass
