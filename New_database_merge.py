@@ -17,6 +17,7 @@ from tkinter import *
 from tkinter import simpledialog
 from tkinter.filedialog import askopenfilename
 import re
+import time as timetime
 from datetime import datetime, time
 
 # Ask the User to give the files - this will allow this to work on any Windows computer
@@ -380,7 +381,7 @@ def stop():
 
 def stop_program():
     # Put on the finishing touches
-    text = Label(app, text = 'Applying Formatting, this may take a few minutes')
+    text = Label(app, text = 'Applying Formatting, this may take a bit')
     text.grid()
     finishing_touches()
     # Save the excel file and close the workbooks
@@ -398,6 +399,21 @@ def stop_program():
     text.grid()
     sys.exit()
 
+
+def save_program():
+    # A button to save at any time in the process
+    text = Label(app, text = 'Saving, one moment')
+    text.grid()
+    timetime.sleep(1)
+    try:
+        workbook.save(filename = main_file + ' backup.xlsx')
+        text = Label(app, text = 'Saved')
+        text.grid()
+    except:
+        text = Label(app, text = 'Error while saving, please try again')
+        text.grid()
+
+
 root_win = tk.Tk()
 root_win.title("RPT Merge")
 root_win.geometry('400x300')
@@ -405,8 +421,9 @@ app = Frame(root_win)
 app.grid()
 start_button = Button(app, text="Start the Merge",command=start_thread)
 stop_button = Button(app, text="Stop Merging",command=stop)
+save_button = Button(app, text="Manual Save",command=save_program)
 
 start_button.grid()
 stop_button.grid()
-
+save_button.grid()
 app.mainloop()
