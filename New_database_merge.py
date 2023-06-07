@@ -16,6 +16,8 @@ import tkinter as tk
 from tkinter import *
 from tkinter import simpledialog
 from tkinter.filedialog import askopenfilename
+import re
+from datetime import datetime, time
 
 # Ask the User to give the files - this will allow this to work on any Windows computer
 main_file = askopenfilename(title = 'File you want to update') # Excel File we want to add all the data into
@@ -53,34 +55,99 @@ def Merge_RPT_files():
     if stop == 0:
         stop_program()
 
-    for file in os.listdir(dir_with_files):
-        os.chdir(dir_with_files)
-        book = pyxl.load_workbook(file, data_only = True)
-        names = book.sheetnames
-        # Have to get index for specific sheet
-        i = 0
-        for name in names:
-            if name == 'INSP RPT 2':
-                break
-            else:
+    for folder in os.listdir(dir_with_files):
+        folder = os.path.join(dir_with_files, folder)
+        try:
+            os.chdir(folder)
+        except:
+            continue
+        for file in os.listdir(folder):
+            try:
+                book = pyxl.load_workbook(file, data_only = True)
+            except:
+                continue
+            # names = book.sheetnames ### Does not work since there are charts in some workbooks (Counts as a sheetname but not a worksheet)
+            names = [sheet.title for sheet in book.worksheets]
+            # Have to get index for specific sheet
+            i = 0
+            sheets = []
+            for name in names:
+                if name == 'INSP RPT 1':
+                    sheets.append(i)
+                elif name == 'INSP RPT 1 (2)':
+                    sheets.append(i)
+                elif name == 'INSP RPT 2':
+                    sheets.append(i)
+                elif name == 'INSP RPT 2 (2)':
+                    sheets.append(i)
                 i += 1
-        sheet = book.worksheets[i]
+            if i >= len(names)-1:
+                pass
+            # sheet = book.worksheets[i] ##### Need to make the script work for all sheets in sheets
 
-        # Move data into the main workbook
-        # Columns to copy are A10 - AA57
-        for row in range(10, 57+1): # Rows 10-57
-            for column in range(1, 27+1): # Columns A-AA
-                c = sheet.cell(row, column)
-                worksheet.cell(row = row_count+1, column = column).value = c.value
-                column += 1
-            row += 1; row_count += 1 
+            # All sheets that need to be copied
+            for sheet in sheets:
+                sheet = book.worksheets[sheet]
+
+                # Find the rows we need (Should have a date or time in the first column)
+                rows_to_iterate = []
+                i = 1
+                for row in sheet.iter_rows(min_row=1, values_only=True):
+                    cell_value = row[0]  # Access the first column of each row
+
+                    if cell_value and is_date_or_time(str(cell_value)):
+                        # The cell value is a date or time
+                        rows_to_iterate.append(i)
+                        i+=1
+                    else:
+                        # The cell value is not a date or time
+                        i+=1
+
+                # Find the date to use in the datetime
+                row_num = 1; actual_date = 0
+                for row in sheet.iter_rows(min_row=1, max_row = rows_to_iterate[0]-1, values_only=True):
+                    if actual_date == 0:
+                        col_num = 1
+                        for cell in row:
+                            cell_value = cell
+                            if cell_value and is_date_or_time(str(cell_value)):
+                                # The cell value is a date or time
+                                row_with_date = row_num; col_with_date = col_num; actual_date = cell_value
+                                col_num+=1
+                                break
+                            else:
+                                # The cell value is not a date or time
+                                # print(f"Not a date or time: {cell_value}")
+                                col_num+=1
+                        row_num += 1 
+
+                # Move data into the main workbook
+                for row in range(rows_to_iterate[0], rows_to_iterate[-1]+1):
+                    for column in range(1, 27+1): # Columns A-AA
+                        if column == 1: # Need to adjust the datetime to show the correct date
+                            date = extract_date(str(actual_date))
+                            cell_value = sheet.cell(row, column = 1).value
+                            time = extract_time(str(cell_value))
+
+                            if date and time:
+                                combined_datetime = datetime.combine(date, time)
+                                # print(f"Combined datetime: {combined_datetime}")
+                                worksheet.cell(row = row_count+1, column = column).value = combined_datetime
+                            else:
+                                # print("Unable to extract both date and time components")
+                                pass
+
+                        else:
+                            c = sheet.cell(row = row, column = column)
+                            worksheet.cell(row = row_count+1, column = column).value = c.value
+                            column += 1
+                    row += 1; row_count += 1 
+            
+            os.remove(file)
+            
+            if stop == 0:
+                stop_program()
         
-        os.remove(file)
-        
-        if stop == 0:
-            stop_program()
-    
-    finishing_touches()
     workbook.save(filename = main_file)
     text = Label(app, text = "Finished merging \n Saving, one moment")
     text.grid()
@@ -109,8 +176,9 @@ def finishing_touches():
             c2.value = c.value
 
     # Delete Empty Rows
+    row_count_max = worksheet.max_row # Recount the rows
     rows_to_delete = []
-    for row in range(4, row_count+1): # We must first find each row that needs to be deleted
+    for row in range(4, row_count_max+1): # We must first find each row that needs to be deleted
         empty = []
         for column in range(4, 22+1): # columns D-V
             c = worksheet.cell(row, column)
@@ -120,6 +188,22 @@ def finishing_touches():
             rows_to_delete.append(row)
     for row in reversed(rows_to_delete): # Delete the rows >:)
         worksheet.delete_rows(row)
+
+    # Delete Rows that do not have heat numbers (Generally these are just rows that didn't need to be copied)
+    row_count_max = worksheet.max_row # Recount the rows after rows have been deleted
+    to_delete = []
+    for row in range(4, row_count_max+1):
+        c = worksheet.cell(row, 2) #Check the 2nd row for a heat number
+        try:
+            if int(c.value) not in range(100000, 9999999): #Range between 100,000 and 10,000,000 - just in case we go over 1,000,000 in heat numbers in the future
+                to_delete.append(row)
+                print(c.value, 'will be deleted')
+        except:
+            pass
+
+    for row in reversed(to_delete):
+        worksheet.delete_rows(row)
+
 
     ### Formatting
     # Merge cells
@@ -137,7 +221,7 @@ def finishing_touches():
 
     # Bold the font on the Header
     for row in range(1,3+1):
-        for col in range(1, column_count):
+        for col in range(1, column_count+1):
             worksheet.cell(row = row, column = col).font = Font(bold=True)
 
     ### Apply borders
@@ -209,8 +293,49 @@ def finishing_touches():
     for col in columns_for_border:
         worksheet.cell(row = 3, column = col).border = mid_right_header_border
 
+def is_date_or_time(value):
+    # Regex patterns for matching time and date/time formats
+    time_pattern = r'^\d{2}:\d{2}:\d{2}$'
+    datetime_pattern = r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$'
 
+    # Check if the value matches either time or datetime pattern
+    if re.match(time_pattern, value) or re.match(datetime_pattern, value):
+        return True
+    else:
+        return False
 
+def extract_time(datetime_str):
+    try:
+        # Parse the datetime string
+        datetime_value = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
+
+        # Extract the time component
+        time_component = datetime_value.time()
+
+        return time_component
+    except ValueError:
+        # If the datetime string is in the format "HH:MM:SS"
+        try:
+            time_component = datetime.strptime(datetime_str, "%H:%M:%S").time()
+            return time_component
+        except ValueError:
+            # Invalid datetime format
+            return None
+
+def extract_date(datetime_str):
+    try:
+        # Parse the datetime string
+        datetime_value = datetime.strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
+
+        # Extract the date component
+        date_component = datetime_value.date()
+
+        return date_component
+    except ValueError:
+        # Invalid datetime format
+        return None
+
+# Functions for the addtional thread
 def start_thread():
     # For repetition
     global main_file_check
@@ -235,6 +360,8 @@ def stop():
 
 def stop_program():
     # Put on the finishing touches
+    text = Label(app, text = 'Applying Formatting, this may take a few minutes')
+    text.grid()
     finishing_touches()
     # Save the excel file and close the workbooks
     try:
