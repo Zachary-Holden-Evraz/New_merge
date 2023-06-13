@@ -72,35 +72,13 @@ def Merge_RPT_files():
             # Have to get index for specific sheet
             i = 0
             sheets = []
-            for name in names:
-                if name == 'INSP RPT 1':
-                    sheets.append(i)
-                elif name == 'INSP RPT 1 (2)':
-                    sheets.append(i)
-                elif name == 'INSP RPT 2':
-                    sheets.append(i)
-                elif name == 'INSP RPT 2 (2)':
-                    sheets.append(i)
-                elif name == 'INSP RPT 1 (8hr)':
-                    sheets.append(i)
-                elif name == 'INSP RPT 1 (8hr) (2)':
-                    sheets.append(i)
-                elif name == 'INSP RPT 1 (12hr)':
-                    sheets.append(i)
-                elif name == 'INSP RPT 1 (12hr) (2)':
-                    sheets.append(i)
-                elif name == 'INSP RPT 2 (8hr)':
-                    sheets.append(i)
-                elif name == 'INSP RPT 2 (8hr) (2)':
-                    sheets.append(i)
-                elif name == 'INSP RPT 2 (12hr)':
-                    sheets.append(i)
-                elif name == 'INSP RPT 2 (12hr) (2)':
-                    sheets.append(i)
-                i += 1
-            if i >= len(names)-1:
-                pass
-            # sheet = book.worksheets[i] ##### Need to make the script work for all sheets in sheets
+            sheets = [i for i, name in enumerate(names) if name in [
+                'INSP RPT 1', 'INSP RPT 1 (2)', 'INSP RPT 2', 'INSP RPT 2 (2)',
+                'INSP RPT 1 (8hr)', 'INSP RPT 1 (8hr) (2)', 'INSP RPT 1 (12hr)', 'INSP RPT 1 (12hr) (2)',
+                'INSP RPT 2 (8hr)', 'INSP RPT 2 (8hr) (2)', 'INSP RPT 2 (12hr)', 'INSP RPT 2 (12hr) (2)',
+                'INSP RPT 1-8', 'INSP RPT 1-8 (2)', 'INSP RPT 1-12', 'INSP RPT 1-12 (2)',
+                'INSP RPT 2-8', 'INSP RPT 2-8 (2)', 'INSP RPT 2-12', 'INSP RPT 2-12 (2)'
+            ]]
 
             # All sheets that need to be copied
             for sheet in sheets:
@@ -448,7 +426,7 @@ root_win.title("RPT Merge")
 root_win.geometry('400x300')
 app = Frame(root_win)
 app.grid()
-start_button = Button(app, text="Start the Merge",command=start_thread)
+start_button = Button(app, text="Merge Files",command=start_thread)
 stop_button = Button(app, text="Stop Merging",command=stop)
 save_button = Button(app, text="Manual Save",command=save_program)
 
