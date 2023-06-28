@@ -1,7 +1,9 @@
 Update 6/28/23: 
 - Made a new file that can merge years before 2016.  This file will be saved under a slightly different name.
 - There will be a different sheet for each different format used in that year.  (Can be used for 2016 on, just doesn't look as clean)
-- Since there are many different sheets (for formatting), some postprocessing is required.  
+- Since there are many different sheets (for formatting), some postprocessing is required. 
+
+- Included a new file to convert xls files to xlsx files.  This is neccessary for the merge program to run for earlier years. 
 
 Update 6/7/23:
 - Included a manual save button.  This saves a new file under a slightly different name (added backup to the end).
