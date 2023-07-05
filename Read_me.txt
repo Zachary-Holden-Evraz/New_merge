@@ -1,3 +1,10 @@
+Update 7/5/23:
+- Should be finalized and not require more updates.  There are three files that can deal with different formatting
+	from different years, specified in the file names.  For earlier years, check the file types that will be
+	copied; if they are .xls files, run the xls2xlsx file first to convert all of them to .xlsx files.  
+	Otherwise, the information cannot be copied by our files.  The original python files are in the Github
+	as well in case changes need to be made in the future.  
+
 Update 6/28/23: 
 - Made a new file that can merge years before 2016.  This file will be saved under a slightly different name.
 - There will be a different sheet for each different format used in that year.  (Can be used for 2016 on, just doesn't look as clean)
